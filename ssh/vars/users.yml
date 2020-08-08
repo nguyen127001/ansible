@@ -1,0 +1,8 @@
+---
+users:
+
+  - username: nguyenvn
+    use_sudo: yes
+
+  - username: khangvm
+    use_sudo: yes
