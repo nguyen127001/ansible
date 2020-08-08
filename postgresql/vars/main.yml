@@ -1,0 +1,6 @@
+---
+db_user: d2cuser
+db_name: d2c
+db_password: Wrq5ndS2jEqA
+postgresql_version: 10
+update_apt_cache: true

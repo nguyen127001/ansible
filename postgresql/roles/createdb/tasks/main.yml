@@ -1,0 +1,110 @@
+---
+
+
+- name: Install some package.
+  apt: 
+    name:
+      - bash
+      - openssl
+      - libssl-dev
+      - libssl-doc
+    state: present 
+  tags:
+    - packages
+
+- name: Install PostgreSQL
+  apt: 
+    name:
+    - postgresql
+    - postgresql-contrib
+    - libpq-dev
+    - python-psycopg2
+    - python-pip
+    state: present
+  tags: packages
+
+- name: Start PostgreSQL 
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Ensure database is created
+  become: true
+  become_user: postgres
+  postgresql_db: 
+    name: '{{ db_name }}'
+    encoding: 'UTF-8'
+    lc_collate: 'en_US.UTF-8'
+    lc_ctype: 'en_US.UTF-8'
+    template: 'template0'
+    state: present
+
+- name: Ensure user has access to the database
+  become: true
+  become_user: postgres
+  postgresql_user: 
+    db: '{{ db_name }}'
+    name: '{{ db_user }}'
+    password: '{{ db_password }}'
+    priv: ALL
+    state: present
+
+- name: Ensure user does not have unnecessary privileges
+  become: true
+  become_user: postgres
+  postgresql_user: 
+    name: '{{ db_user }}'
+    role_attr_flags: 'NOSUPERUSER,NOCREATEDB'
+    state: present
+
+- name: Configure PostgreSQL. Set listen_addresses.
+  become: true
+  lineinfile:
+    path: /etc/postgresql/{{ postgresql_version }}/main/postgresql.conf
+    regexp: "listen_addresses ="
+    line: "listen_addresses = '*'"
+    state: present
+  notify: restart postgresql
+
+- name: Grant user from network xxxx/x access.
+  postgresql_pg_hba:
+    dest: /etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf
+    contype: host
+    users: all
+    source: 0.0.0.0/0
+    databases: all
+    method: md5
+
+- name: Configure PostgreSQL. Set max_connection.
+  become: true
+  lineinfile:
+    path: /etc/postgresql/{{ postgresql_version }}/main/postgresql.conf
+    regexp: "max_connections ="
+    line: "max_connections = 1000"
+    state: present
+  notify: restart postgresql
+
+- name: Configure PostgreSQL. Set max_connection.
+  become: true
+  lineinfile: 
+    path: /etc/postgresql/{{ postgresql_version }}/main/postgresql.conf
+    regexp: "ssl ="
+    line: "ssl = false"
+    state: present
+  notify: restart postgresql
+
+- name: Configure PostgreSQL. Set autovacuum.
+  become: true
+  lineinfile: 
+    path: /etc/postgresql/{{ postgresql_version }}/main/postgresql.conf
+    regexp: "autovacuum ="
+    line: "autovacuum = on"
+    state: present
+  notify: restart postgresql
+
+- name: Start PostgreSQL 
+  service:
+    name: postgresql
+    state: restarted
+    enabled: yes
