@@ -16,3 +16,9 @@ inventory = /etc/ansible/hosts
 remote_user = root
 ask_sudo_pass= true
 ```
+
+
+```
+ansible dbserver  -m ping
+ansible-playbook  ansible_playbook.yml
+```
